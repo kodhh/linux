@@ -421,6 +421,7 @@ error:
 
 static const struct of_device_id aw2013_match_table[] = {
 	{ .compatible = "awinic,aw2013", },
+	{ .compatible = "awinic,et6326", },
 	{ /* sentinel */ },
 };
 
