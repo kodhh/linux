@@ -64,3 +64,6 @@ obj-$(CONFIG_DRM_PANEL_XIAOMI_TIANMA_NT35596) += panel-xiaomi-tianma-nt35596.o
 obj-$(CONFIG_DRM_PANEL_XIAOMI_YSL_HX8394F) += panel-xiaomi-ysl-hx8394f.o
 obj-$(CONFIG_DRM_PANEL_XIAOMI_YSL_ILI7807D) += panel-xiaomi-ysl-ili7807d.o
 obj-$(CONFIG_DRM_PANEL_XIAOMI_YSL_ILI9881C) += panel-xiaomi-ysl-ili9881c.o
+obj-$(CONFIG_DRM_PANEL_YU_YUREKA2_OTM1901A) += panel-yu-yureka2-otm1901a.o
+obj-$(CONFIG_DRM_PANEL_YU_YUREKA2_OTM1901A_OTP) += panel-yu-yureka2-otm1901a-otp.o
+obj-$(CONFIG_DRM_PANEL_YU_YUREKA2_R63350) += panel-yu-yureka2-r63350.o
