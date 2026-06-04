@@ -183,6 +183,7 @@
 		reg = <0x30>;
 
 		vcc-supply = <&pm8953_l10>;
+		vio-supply = <&pm8953_l10>;
 
 		#address-cells = <1>;
 		#size-cells = <0>;
