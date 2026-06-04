@@ -164,15 +164,14 @@
 	status = "okay";
 
 	nfc@28 {
-		compatible = "nxp,pn547";
+		compatible = "nxp,pn544-i2c";
 		reg = <0x28>;
 
 		interrupt-parent = <&tlmm>;
 		interrupts = <17 IRQ_TYPE_LEVEL_HIGH>;
 
-		nxp,irq-gpio = <&tlmm 17 GPIO_ACTIVE_HIGH>;
-		nxp,ven-gpio = <&tlmm 16 GPIO_ACTIVE_HIGH>;
-		nxp,firm-gpio = <&tlmm 62 GPIO_ACTIVE_HIGH>;
+		enable-gpios = <&tlmm 16 GPIO_ACTIVE_HIGH>;
+		firmware-gpios = <&tlmm 62 GPIO_ACTIVE_HIGH>;
 	};
 };
 
@@ -220,8 +219,25 @@
 	};
 };
 
+&gpu_zap_shader {
+	firmware-name = "qcom/msm8953/yu/yureka2/a506_zap.mdt";
+};
+
 &panel {
 	compatible = "yu,yureka2-panel";
+};
+
+&pmi8950_haptics {
+	qcom,actuator-type = <HAP_TYPE_ERM>;
+	qcom,brake-pattern = <0x3 0x3 0x0 0x0>;
+	qcom,wave-play-rate-us = <5263>;
+	qcom,wave-shape = <HAP_WAVE_SQUARE>;
+
+	status = "okay";
+};
+
+&pm8953_l2 {
+	regulator-min-microvolt = <1200000>;
 };
 
 &sdhc_2 {
@@ -245,6 +261,13 @@
 	pinctrl-1 = <&cdc_pdm_lines_sus &cdc_pdm_lines_2_sus &cdc_pdm_comp_lines_sus>;
 
 	status = "okay";
+};
+
+&wcd_codec {
+	/delete-property/ qcom,gnd-jack-type-normally-open;
+	/delete-property/ qcom,hphl-jack-type-normally-open;
+	qcom,mbhc-vthreshold-high = <73 233 438 438 438>;
+	qcom,mbhc-vthreshold-low = <73 233 438 438 438>;
 };
 
 &tlmm {
