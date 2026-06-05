@@ -278,6 +278,7 @@ config SND_SOC_ALL_CODECS
 	imply SND_SOC_TAS6424
 	imply SND_SOC_TDA7419
 	imply SND_SOC_TFA9879
+	imply SND_SOC_TFA98XX
 	imply SND_SOC_TFA989X
 	imply SND_SOC_TLV320ADC3XXX
 	imply SND_SOC_TLV320ADCX140
@@ -2251,6 +2252,15 @@ config SND_SOC_TFA9872
 config SND_SOC_TFA9879
 	tristate "NXP Semiconductors TFA9879 amplifier"
 	depends on I2C
+
+config SND_SOC_TFA98XX
+	tristate "NXP Semiconductors TFA98XX amplifier"
+	depends on I2C
+	select REGMAP_I2C
+	help
+	  Enable support for NXP TFA98XX family speaker amplifiers,
+	  e.g. TFA9895. This driver runs the built-in "CoolFlux DSP"
+	  and requires a firmware container file (tfa98xx.cnt).
 
 config SND_SOC_TFA989X
 	tristate "NXP/Goodix TFA989X (TFA1) amplifiers"
