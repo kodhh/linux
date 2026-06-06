@@ -164,7 +164,7 @@
 	status = "okay";
 
 	nfc@28 {
-		compatible = "nxp,pn544-i2c";
+		compatible = "nxp,nxp-nci-i2c";
 		reg = <0x28>;
 
 		interrupt-parent = <&tlmm>;
