@@ -1,0 +1,59 @@
+name: Build kernel for YU Yureka 2
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang llvm lld \
+            gcc-aarch64-linux-gnu \
+            gcc-arm-linux-gnueabi
+
+      - name: Merge config fragments
+        run: |
+          ARCH=arm64 scripts/kconfig/merge_config.sh -O out -m \
+            arch/arm64/configs/defconfig \
+            arch/arm64/configs/virt.config \
+            arch/arm64/configs/no-unused-drivers.config \
+            arch/arm64/configs/msm8953.config \
+            arch/arm64/configs/yu-yureka2.config
+
+      - name: Build kernel and DTBs
+        run: |
+          make ARCH=arm64 O=out olddefconfig \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
+            CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1
+          make ARCH=arm64 O=out -j$(nproc) \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
+            CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1
+
+      - name: Install modules
+        run: |
+          make ARCH=arm64 O=out modules_install \
+            INSTALL_MOD_PATH=modules \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-yureka2
+          path: |
+            out/arch/arm64/boot/Image
+            out/arch/arm64/boot/dts/qcom/msm8953-yu-yureka2.dtb
+            modules/lib/modules/
