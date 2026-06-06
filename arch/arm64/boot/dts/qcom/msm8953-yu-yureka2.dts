@@ -116,8 +116,8 @@
 
 		avdd-supply = <&pm8953_l22>;
 		dvdd-supply = <&pm8953_l2>;
-		vdd-supply = <&pm8953_l17>;
 		vio-supply = <&pm8953_l6>;
+		aux-supply = <&pm8953_l17>;
 
 		rotation = <270>;
 		orientation = <1>;
