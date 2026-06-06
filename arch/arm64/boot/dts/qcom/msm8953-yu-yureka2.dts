@@ -214,9 +214,12 @@
 &i2c_8 {
 	status = "okay";
 
-	audio-amplifier@34 {
+	speaker_codec: audio-codec@34 {
 		compatible = "nxp,tfa9895";
 		reg = <0x34>;
+		sound-name-prefix = "Speaker";
+		vddd-supply = <&pm8953_l5>;
+		#sound-dai-cells = <0>;
 	};
 };
 
@@ -260,6 +263,22 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&cdc_pdm_lines_act &cdc_pdm_lines_2_act &cdc_pdm_comp_lines_act>;
 	pinctrl-1 = <&cdc_pdm_lines_sus &cdc_pdm_lines_2_sus &cdc_pdm_comp_lines_sus>;
+
+	quinary-mi2s-dai-link {
+		link-name = "Quinary MI2S";
+
+		cpu {
+			sound-dai = <&q6afedai QUINARY_MI2S_RX>;
+		};
+
+		platform {
+			sound-dai = <&q6routing>;
+		};
+
+		codec {
+			sound-dai = <&speaker_codec>;
+		};
+	};
 
 	status = "okay";
 };
