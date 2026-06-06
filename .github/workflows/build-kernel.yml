@@ -2,9 +2,9 @@ name: Build kernel for YU Yureka 2
 
 on:
   push:
-    branches: [main]
+    branches: [7.0.9/main]
   pull_request:
-    branches: [main]
+    branches: [7.0.9/main]
   workflow_dispatch:
 
 jobs:
@@ -24,6 +24,8 @@ jobs:
 
       - name: Merge config fragments
         run: |
+          make ARCH=arm64 mrproper
+          mkdir out
           ARCH=arm64 scripts/kconfig/merge_config.sh -O out -m \
             arch/arm64/configs/defconfig \
             arch/arm64/configs/virt.config \
@@ -47,6 +49,7 @@ jobs:
           make ARCH=arm64 O=out modules_install \
             INSTALL_MOD_PATH=modules \
             CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
             CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1
 
       - name: Upload artifacts
