@@ -30,6 +30,15 @@
 
 #include "qcom-smbchg.h"
 
+static int smbchg_parallel_en = 1;
+module_param_named(parallel_en, smbchg_parallel_en, int, 0644);
+
+static int smbchg_main_chg_fcc_percent = 50;
+module_param_named(main_chg_fcc_percent, smbchg_main_chg_fcc_percent, int, 0644);
+
+static int smbchg_main_chg_icl_percent = 60;
+module_param_named(main_chg_icl_percent, smbchg_main_chg_icl_percent, int, 0644);
+
 /**
  * find_closest_smaller - locate the closest smaller element in a sorted array
  * @x: The reference value.
@@ -898,6 +907,66 @@ static bool smbchg_check_role_switch(struct smbchg_chip *chip, bool otg_present)
 	return false;
 }
 
+static struct power_supply *smbchg_parallel_get_psy(struct smbchg_chip *chip)
+{
+	if (!smbchg_parallel_en)
+		return NULL;
+	if (chip->parallel_psy)
+		return chip->parallel_psy;
+	chip->parallel_psy = power_supply_get_by_name("usb-parallel");
+	if (!chip->parallel_psy)
+		dev_dbg(chip->dev, "Parallel charger not found\n");
+	return chip->parallel_psy;
+}
+
+static void smbchg_parallel_detect(struct smbchg_chip *chip)
+{
+	struct power_supply *parallel_psy = smbchg_parallel_get_psy(chip);
+	union power_supply_propval pval = { .intval = 1, };
+	int rc;
+
+	if (!parallel_psy)
+		return;
+
+	rc = power_supply_set_property(parallel_psy, POWER_SUPPLY_PROP_PRESENT, &pval);
+	if (rc) {
+		dev_dbg(chip->dev, "Parallel charger init failed: %d\n", rc);
+		chip->parallel_charger_detected = false;
+	} else {
+		chip->parallel_charger_detected = true;
+		dev_info(chip->dev, "Parallel charger detected\n");
+	}
+}
+
+static int smbchg_parallel_enable(struct smbchg_chip *chip, bool en)
+{
+	struct power_supply *parallel_psy = smbchg_parallel_get_psy(chip);
+	union power_supply_propval pval = { .intval = en ? 1 : 0, };
+
+	if (!parallel_psy || !chip->parallel_charger_detected)
+		return 0;
+
+	return power_supply_set_property(parallel_psy, POWER_SUPPLY_PROP_ONLINE, &pval);
+}
+
+static void smbchg_parallel_configure(struct smbchg_chip *chip, int total_fcc_ua, int total_icl_ua)
+{
+	struct power_supply *parallel_psy = smbchg_parallel_get_psy(chip);
+	union power_supply_propval pval;
+
+	if (!parallel_psy || !chip->parallel_charger_detected)
+		return;
+
+	pval.intval = total_fcc_ua * (100 - smbchg_main_chg_fcc_percent) / 100;
+	power_supply_set_property(parallel_psy, POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT_MAX, &pval);
+
+	pval.intval = total_icl_ua * (100 - smbchg_main_chg_icl_percent) / 100;
+	power_supply_set_property(parallel_psy, POWER_SUPPLY_PROP_CURRENT_MAX, &pval);
+
+	pval.intval = chip->batt_info->voltage_max_design_uv;
+	power_supply_set_property(parallel_psy, POWER_SUPPLY_PROP_VOLTAGE_MAX, &pval);
+}
+
 static void smbchg_detect_work(struct work_struct *work)
 {
 	struct smbchg_chip *chip =
@@ -942,6 +1011,25 @@ static void smbchg_detect_work(struct work_struct *work)
 				ERR_PTR(ret));
 			return;
 		}
+
+		/* Detect and enable parallel charger */
+		smbchg_parallel_detect(chip);
+		if (chip->parallel_charger_detected) {
+			int ilim = smbchg_usb_get_ilim(chip);
+			int fcc = smbchg_charging_get_ilim(chip);
+
+			if (ilim > 0 && fcc > 0) {
+				int main_fcc = fcc * smbchg_main_chg_fcc_percent / 100;
+
+				smbchg_charging_set_ilim(chip, main_fcc);
+				smbchg_parallel_configure(chip, fcc, ilim);
+				smbchg_parallel_enable(chip, true);
+			}
+		}
+	} else if (!usb_present) {
+		smbchg_parallel_enable(chip, false);
+		chip->parallel_charger_detected = false;
+		chip->parallel_psy = NULL;
 	}
 
 	smbchg_extcon_update(chip, usb_present, otg_present);

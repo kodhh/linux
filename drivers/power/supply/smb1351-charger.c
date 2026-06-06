@@ -647,7 +647,7 @@ static enum power_supply_property smb1351_parallel_properties[] = {
 };
 
 static const struct power_supply_desc smb1351_parallel_psy_desc = {
-	.name			= "parallel",
+	.name			= "usb-parallel",
 	.type			= POWER_SUPPLY_TYPE_USB,
 	.properties		= smb1351_parallel_properties,
 	.num_properties		= ARRAY_SIZE(smb1351_parallel_properties),

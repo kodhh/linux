@@ -257,6 +257,10 @@ struct smbchg_chip {
 	struct mutex otg_lock;
 
 	const struct smbchg_data *data;
+
+	/* Parallel charger */
+	struct power_supply *parallel_psy;
+	bool parallel_charger_detected;
 };
 
 struct smbchg_irq {
