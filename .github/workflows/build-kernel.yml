@@ -31,7 +31,8 @@ jobs:
             arch/arm64/configs/virt.config \
             arch/arm64/configs/no-unused-drivers.config \
             arch/arm64/configs/msm8953.config \
-            arch/arm64/configs/yu-yureka2.config
+            arch/arm64/configs/yu-yureka2.config \
+            ‎kernel/configs/pmos.config
 
       - name: Build kernel and DTBs
         run: |
@@ -59,4 +60,4 @@ jobs:
           path: |
             out/arch/arm64/boot/Image
             out/arch/arm64/boot/dts/qcom/msm8953-yu-yureka2.dtb
-            modules/lib/modules/
+            modules/lib/modules/7.0.9-postmarketos-qcom-msm8953+
