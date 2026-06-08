@@ -32,7 +32,7 @@ jobs:
             arch/arm64/configs/no-unused-drivers.config \
             arch/arm64/configs/msm8953.config \
             arch/arm64/configs/yu-yureka2.config \
-            ‎kernel/configs/pmos.config
+            kernel/configs/pmos.config
 
       - name: Build kernel and DTBs
         run: |
