@@ -53,6 +53,11 @@ jobs:
             CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
             CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1
 
+      - name: Compress modules
+        run: |
+          cd modules/lib/modules
+          tar -czf modules.tar.gz 7.0.9-postmarketos-qcom-msm8953+/
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -60,4 +65,4 @@ jobs:
           path: |
             out/arch/arm64/boot/Image
             out/arch/arm64/boot/dts/qcom/msm8953-yu-yureka2.dtb
-            modules/lib/modules/7.0.9-postmarketos-qcom-msm8953+
+            modules/lib/modules/modules.tar.gz
