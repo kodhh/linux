@@ -2,6 +2,7 @@
 // Generated with linux-mdss-dsi-panel-driver-generator from vendor device tree:
 //   Copyright (c) 2013, The Linux Foundation. All rights reserved.
 
+#include <linux/backlight.h>
 #include <linux/delay.h>
 #include <linux/gpio/consumer.h>
 #include <linux/module.h>
@@ -183,6 +184,41 @@ static int otm1901a_dj_otp_get_modes(struct drm_panel *panel,
 	return 1;
 }
 
+static int otm1901a_dj_otp_bl_update_status(struct backlight_device *bl)
+{
+	struct mipi_dsi_device *dsi = bl_get_data(bl);
+	u16 brightness = backlight_get_brightness(bl);
+	int ret;
+
+	dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
+
+	ret = mipi_dsi_dcs_set_display_brightness(dsi, brightness);
+	if (ret < 0)
+		return ret;
+
+	dsi->mode_flags |= MIPI_DSI_MODE_LPM;
+
+	return 0;
+}
+
+static const struct backlight_ops otm1901a_dj_otp_bl_ops = {
+	.update_status = otm1901a_dj_otp_bl_update_status,
+};
+
+static struct backlight_device *
+otm1901a_dj_otp_create_backlight(struct mipi_dsi_device *dsi)
+{
+	struct device *dev = &dsi->dev;
+	const struct backlight_properties props = {
+		.type = BACKLIGHT_RAW,
+		.brightness = 255,
+		.max_brightness = 255,
+	};
+
+	return devm_backlight_device_register(dev, dev_name(dev), dev, dsi,
+					      &otm1901a_dj_otp_bl_ops, &props);
+}
+
 static const struct drm_panel_funcs otm1901a_dj_otp_panel_funcs = {
 	.prepare = otm1901a_dj_otp_prepare,
 	.unprepare = otm1901a_dj_otp_unprepare,
@@ -210,11 +246,16 @@ static int otm1901a_dj_otp_probe(struct mipi_dsi_device *dsi)
 	dsi->lanes = 4;
 	dsi->format = MIPI_DSI_FMT_RGB888;
 	dsi->mode_flags = MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST |
-			  MIPI_DSI_MODE_VIDEO_HSE | MIPI_DSI_MODE_EOT_PACKET |
+			  MIPI_DSI_MODE_VIDEO_HSE |
 			  MIPI_DSI_CLOCK_NON_CONTINUOUS | MIPI_DSI_MODE_LPM;
 
 	drm_panel_init(&ctx->panel, dev, &otm1901a_dj_otp_panel_funcs,
 		       DRM_MODE_CONNECTOR_DSI);
+
+	ctx->panel.backlight = otm1901a_dj_otp_create_backlight(dsi);
+	if (IS_ERR(ctx->panel.backlight))
+		return dev_err_probe(dev, PTR_ERR(ctx->panel.backlight),
+				     "Failed to create backlight\n");
 
 	drm_panel_add(&ctx->panel);
 
@@ -227,7 +268,7 @@ static int otm1901a_dj_otp_probe(struct mipi_dsi_device *dsi)
 	return 0;
 }
 
-static int otm1901a_dj_otp_remove(struct mipi_dsi_device *dsi)
+static void otm1901a_dj_otp_remove(struct mipi_dsi_device *dsi)
 {
 	struct otm1901a_dj_otp *ctx = mipi_dsi_get_drvdata(dsi);
 	int ret;
@@ -237,8 +278,6 @@ static int otm1901a_dj_otp_remove(struct mipi_dsi_device *dsi)
 		dev_err(&dsi->dev, "Failed to detach from DSI host: %d\n", ret);
 
 	drm_panel_remove(&ctx->panel);
-
-	return 0;
 }
 
 static const struct of_device_id otm1901a_dj_otp_of_match[] = {
